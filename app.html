@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Deep Sea Snake</title>
+    <style>
+        /* CSS: Professional styling for the game */
+        body {
+            background-color: #1a252f; /* Dark blue background */
+            color: white;
+            font-family: 'Lato', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        canvas {
+            border: 5px solid #2c3e50;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            background-color: #243447;
+        }
+        .stats {
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        .btn-back {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #1abc9c;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .btn-back:hover { background-color: #16a085; }
+    </style>
+</head>
+<body>
+
+    <div class="stats">Fish Length: <span id="score">1</span></div>
+    
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+    <p>Use <b>Arrow Keys</b> to swim!</p>
+
+    <a href="scratch.html" class="btn-back">Back to Fishing Page</a>
+
+    <script>
+        // JavaScript: The game logic
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+
+        let score = 1;
+        let box = 20; // Size of one square
+        let fish = [{ x: 10 * box, y: 10 * box }];
+        let worm = {
+            x: Math.floor(Math.random() * 19 + 1) * box,
+            y: Math.floor(Math.random() * 19 + 1) * box
+        };
+        let d;
+
+        // Listen for arrow keys
+        document.addEventListener("keydown", direction);
+        function direction(event) {
+            if(event.keyCode == 37 && d != "RIGHT") d = "LEFT";
+            else if(event.keyCode == 38 && d != "DOWN") d = "UP";
+            else if(event.keyCode == 39 && d != "LEFT") d = "RIGHT";
+            else if(event.keyCode == 40 && d != "UP") d = "DOWN";
+        }
+
+        function draw() {
+            // Clear background
+            ctx.fillStyle = "#243447";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Fish (Snake)
+            for(let i = 0; i < fish.length; i++) {
+                ctx.fillStyle = (i == 0) ? "#3498db" : "#5dade2"; // Head is darker blue
+                ctx.fillRect(fish[i].x, fish[i].y, box, box);
+                ctx.strokeStyle = "#1a252f";
+                ctx.strokeRect(fish[i].x, fish[i].y, box, box);
+            }
+
+            // Draw Worm (Food)
+            ctx.fillStyle = "#e67e22"; // Worm orange
+            ctx.fillRect(worm.x, worm.y, box, box);
+
+            // Old head position
+            let fishX = fish[0].x;
+            let fishY = fish[0].y;
+
+            // Move direction
+            if( d == "LEFT") fishX -= box;
+            if( d == "UP") fishY -= box;
+            if( d == "RIGHT") fishX += box;
+            if( d == "DOWN") fishY += box;
+
+            // Check if fish eats worm
+            if(fishX == worm.x && fishY == worm.y) {
+                score++;
+                scoreElement.innerHTML = score;
+                worm = {
+                    x: Math.floor(Math.random() * 19 + 1) * box,
+                    y: Math.floor(Math.random() * 19 + 1) * box
+                };
+            } else {
+                fish.pop(); // Remove tail
+            }
+
+            let newHead = { x: fishX, y: fishY };
+
+            // Game Over rules (hits wall or self)
+            if(fishX < 0 || fishY < 0 || fishX >= canvas.width || fishY >= canvas.height || collision(newHead, fish)) {
+                clearInterval(game);
+                alert("Game Over! Your fish grew to " + score + " inches.");
+                location.reload(); // Restarts the game
+            }
+
+            fish.unshift(newHead);
+        }
+
+        function collision(head, array) {
+            for(let i = 0; i < array.length; i++) {
+                if(head.x == array[i].x && head.y == array[i].y) return true;
+            }
+            return false;
+        }
+
+        let game = setInterval(draw, 100); // Speed of game (100ms)
+    </script>
+</body>
+</html>
